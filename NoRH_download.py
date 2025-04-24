@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+import os
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+
+base_url = "https://solar.nro.nao.ac.jp/norh/images/daily/2014/"
+output_dir = "norh_2014_data"
+os.makedirs(output_dir, exist_ok=True)
+
+# Step 1: Get monthly folders (01, 02, ..., 12)
+print("Fetching monthly folders...")
+response = requests.get(base_url)
+soup = BeautifulSoup(response.content, 'html.parser')
+month_links = [a['href'] for a in soup.find_all('a') if a['href'].strip('/').isdigit()]
+
+total_downloaded = 0
+
+for month in month_links:
+    month_url = urljoin(base_url, month)
+    month_dir = os.path.join(output_dir, month.strip('/'))
+    os.makedirs(month_dir, exist_ok=True)
+    
+    print(f"\n📁 Processing: {month_url}")
+    resp = requests.get(month_url)
+    soup = BeautifulSoup(resp.content, 'html.parser')
+    file_links = [a['href'] for a in soup.find_all('a') if a['href'].startswith('ifa')]
+
+    for fname in file_links:
+        file_url = urljoin(month_url, fname)
+        local_fname = fname + '.fits'  # Force .fits extension
+        local_path = os.path.join(month_dir, local_fname)
+
+        if not os.path.exists(local_path):
+            print(f"⬇️  Downloading {local_fname}")
+            try:
+                r = requests.get(file_url)
+                with open(local_path, 'wb') as f:
+                    f.write(r.content)
+                total_downloaded += 1
+            except Exception as e:
+                print(f"⚠️  Failed to download {file_url}: {e}")
+
+print(f"\n✅ Downloaded {total_downloaded} files to '{output_dir}'")
+
+
+# In[3]:
+
+
+import os
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+
+# Base URL format for each year's data
+base_url_template = "https://solar.nro.nao.ac.jp/norh/images/daily/{}/"
+
+output_dir = "norh_data"
+os.makedirs(output_dir, exist_ok=True)
+
+# List of years to download data for (you can extend this list as needed)
+years = [str(year) for year in range(1992, 2021)]  # Adjust the range for the years you want
+
+total_downloaded = 0
+
+# Loop over each year
+for year in years:
+    base_url = base_url_template.format(year)
+    print(f"\n📁 Fetching data for year {year}...")
+    
+    # Fetch the monthly folder links for the current year
+    response = requests.get(base_url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    month_links = [a['href'] for a in soup.find_all('a') if a['href'].strip('/').isdigit()]
+
+    for month in month_links:
+        month_url = urljoin(base_url, month)
+        month_dir = os.path.join(output_dir, year, month.strip('/'))
+        os.makedirs(month_dir, exist_ok=True)
+        
+        print(f"\n📁 Processing: {month_url}")
+        resp = requests.get(month_url)
+        soup = BeautifulSoup(resp.content, 'html.parser')
+        file_links = [a['href'] for a in soup.find_all('a') if a['href'].startswith('ifa')]
+
+        for fname in file_links:
+            file_url = urljoin(month_url, fname)
+            local_fname = fname + '.fits'  # Force .fits extension
+            local_path = os.path.join(month_dir, local_fname)
+
+            if not os.path.exists(local_path):
+                print(f"⬇️  Downloading {local_fname}")
+                try:
+                    r = requests.get(file_url)
+                    with open(local_path, 'wb') as f:
+                        f.write(r.content)
+                    total_downloaded += 1
+                except Exception as e:
+                    print(f"⚠️  Failed to download {file_url}: {e}")
+
+print(f"\n✅ Downloaded {total_downloaded} files to '{output_dir}'")
+
+
+# In[ ]:
+
+
+
+
