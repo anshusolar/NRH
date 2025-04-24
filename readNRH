@@ -1,0 +1,32 @@
+import matplotlib.pyplot as plt
+from astropy.io import fits
+import glob
+import sunpy
+
+import numpy as np
+from matplotlib import cm
+
+myfile = '/home/anshu/Desktop/Work/ImageCorrelation/data/ifa140301_024433.fits'
+hdul   = fits.open(myfile)
+
+hdul.info()
+
+one_pix = 4.91106 #arcsec
+onearcmin = 60 #arcsec
+sun  = 60*32/4.91106
+sun
+
+fig, ax = plt.subplots()
+data  = hdul[0].data
+ax.imshow(data, cmap ='jet', aspect='auto', origin = 'lower')
+ctyp1= hdul[0].header['CTYPE1']
+ctyp2= hdul[0].header['CTYPE2']
+Tel = hdul[0].header['ORIGIN']
+DO = hdul[0].header['DATE-OBS']
+TO = hdul[0].header['TIME-OBS']
+ax.set_xlabel(f'{ctyp1} (arcsec)')
+ax.set_ylabel(f'{ctyp2} (arcsec)')
+ax.set_title(f'{Tel} {DO}T{TO}')
+ax.set_aspect('equal', adjustable='box')
+
+
